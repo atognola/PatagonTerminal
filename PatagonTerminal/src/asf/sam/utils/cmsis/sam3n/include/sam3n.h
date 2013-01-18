@@ -44,22 +44,30 @@
 
 #if defined __SAM3N1A__
   #include "sam3n1a.h"
+  #error Processor present in ShangriBoard v1.0 is SAM3N2A not SAM3N1A
 #elif defined __SAM3N1B__
   #include "sam3n1b.h"
+  #error Processor present in ShangriBoard v1.0 is SAM3N2A not SAM3N1B
 #elif defined __SAM3N1C__
   #include "sam3n1c.h"
+  #error Processor present in ShangriBoard v1.0 is SAM3N2A not SAM3N1C
 #elif defined __SAM3N2A__
   #include "sam3n2a.h"
 #elif defined __SAM3N2B__
   #include "sam3n2b.h"
+  #error Processor present in ShangriBoard v1.0 is SAM3N2A not SAM3N2B
 #elif defined __SAM3N2C__
   #include "sam3n2c.h"
+  #error Processor present in ShangriBoard v1.0 is SAM3N2A not SAM3N2C
 #elif defined __SAM3N4A__
   #include "sam3n4a.h"
+  #error Processor present in ShangriBoard v1.0 is SAM3N2A not SAM3N4A
 #elif defined __SAM3N4B__
   #include "sam3n4b.h"
+  #error Processor present in ShangriBoard v1.0 is SAM3N2A not SAM3N4B
 #elif defined __SAM3N4C__
   #include "sam3n4c.h"
+  #error Processor present in ShangriBoard v1.0 is SAM3N2A not SAM3N4C
 #else
   #error Library does not support the specified device.
 #endif

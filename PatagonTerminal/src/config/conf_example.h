@@ -45,7 +45,7 @@
 #define CONF_EXAMPLE_H
 
 #define BOARD_USART	USART0
-#define BOARD_UART	UART0
+#define BOARD_UART0	UART0
 
 #define BOARD_SPI	SPI
 
@@ -56,5 +56,17 @@
 #define confINCLUDE_USART_UART_TUNNEL
 //#define confINCLUDE_USART_CLI
 //#define confINCLUDE_SPI_FLASH_TASK
+
+/* Sanity Checks (do not alter!) */
+#if defined confINCLUDE_USART_UART_TUNNEL
+	#ifndef BOARD_USART
+		#define BOARD_USART	USART0
+		#warning Declaring undeclared BOARD_USART
+	#endif
+	#ifndef BOARD_UART0
+		#define BOARD_UART0	UART0
+		#warning Declaring undeclared BOARD_UART
+	#endif
+#endif
 
 #endif/* CONF_EXAMPLE_H */

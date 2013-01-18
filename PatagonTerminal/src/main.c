@@ -291,7 +291,8 @@
 #define mainUSART_CLI_TASK_STACK_SIZE   (configMINIMAL_STACK_SIZE * 2)
 #define mainCDC_CLI_TASK_STACK_SIZE     (configMINIMAL_STACK_SIZE * 2)
 #define mainUSART_ECHO_TASK_STACK_SIZE  (configMINIMAL_STACK_SIZE)
-#define mainUART_ECHO_TASK_STACK_SIZE   (configMINIMAL_STACK_SIZE)
+#define mainUSART_TUNNEL_TASK_STACK_SIZE  (configMINIMAL_STACK_SIZE)
+#define mainUART_TUNNEL_TASK_STACK_SIZE   (configMINIMAL_STACK_SIZE)
 #define mainSPI_FLASH_TASK_STACK_SIZE   (configMINIMAL_STACK_SIZE * 2)
 #define mainTWI_EEPROM_TASK_STACK_SIZE  (configMINIMAL_STACK_SIZE * 2)
 
@@ -367,10 +368,10 @@ int main(void)
 	See the comments at the top of this file. */
 	#if (defined confINCLUDE_USART_UART_TUNNEL)
 	{
-		create_usart_uart_tunnel_tasks(BOARD_USART,
-		mainUSART_ECHO_TASK_STACK_SIZE,
-		BOARD_UART,
-		mainUART_ECHO_TASK_STACK_SIZE,
+		create_usart_uart_tunnel_tasks(BOARD_USART,								//BOARD_USART points to the USART periph
+		mainUSART_TUNNEL_TASK_STACK_SIZE,
+		BOARD_UART0,															//BOARD_UART0 points to the UART0 periph
+		mainUART_TUNNEL_TASK_STACK_SIZE,
 		mainUSART_ECHO_TASK_PRIORITY);
 	}
 	#endif /* confINCLUDE_USART_ECHO_TASKS */

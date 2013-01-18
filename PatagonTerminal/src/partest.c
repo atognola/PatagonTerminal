@@ -79,6 +79,7 @@
 /* Library includes. */
 #include <board.h>
 #include <gpio.h>
+#include <pmc.h>
 
 /* The number of LEDs available to the user on the evaluation kit. */
 #ifndef partestNUM_LEDS

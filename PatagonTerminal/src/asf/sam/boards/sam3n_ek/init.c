@@ -74,6 +74,8 @@ void board_init(void)
 	gpio_configure_pin(GPIO_PUSH_BUTTON_2, GPIO_PUSH_BUTTON_2_FLAGS);
 
 #ifdef CONF_BOARD_UART_CONSOLE
+	/* Start UART clock */
+	pmc_enable_periph_clk(ID_UART0);
 	/* Configure UART pins */
 	gpio_configure_group(PINS_UART0_PIO, PINS_UART0, PINS_UART0_FLAGS);
 #endif
