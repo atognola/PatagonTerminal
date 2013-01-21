@@ -46,7 +46,7 @@
 
 /* ASF includes. */
 #include "serial.h"
-#include "freertos_uart_serial.h"
+#include "freertos_usart_serial.h"
 #include "freertos_peripheral_control_private.h"
 
 /* Every bit in the interrupt mask. */

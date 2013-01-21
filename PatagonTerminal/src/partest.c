@@ -89,16 +89,20 @@
 /* The index of the pins to which the LEDs are connected.  This file is used
 with many different evaluation kits, so the order may not match the order on
 the evaluation kit hardware. */
-#ifdef LED0_GPIO && LED1_GPIO
+#ifdef LED0_GPIO
+#ifdef LED1_GPIO
 static const uint32_t ulLED[] = {LED0_GPIO, LED1_GPIO};
+#endif
 #endif
 //static const uint32_t ulLED[] = {LED0_GPIO, LED1_GPIO, LED2_GPIO};
 
 /* Relevant active states. */
-#ifdef LED0_GPIO && LED1_GPIO
+#ifdef LED0_GPIO
+#ifdef LED1_GPIO
 static const signed portBASE_TYPE xActiveStates[]
 	= {LED0_ACTIVE_LEVEL, LED1_ACTIVE_LEVEL};
 	//= {LED0_ACTIVE_LEVEL, LED1_ACTIVE_LEVEL, LED2_ACTIVE_LEVEL};
+#endif
 #endif
 
 /*-----------------------------------------------------------*/
@@ -106,7 +110,7 @@ static const signed portBASE_TYPE xActiveStates[]
 void vParTestInitialise(void)
 {
 	
-	#ifdef LED_0_NAME || LED_1_NAME || LED_2_NAME || LED_3_NAME
+	#ifdef LED_0_NAME||LED_1_NAME||LED_2_NAME||LED_3_NAME
 		unsigned long ul;
 		for (ul = 0; ul < partestNUM_LEDS; ul++) {
 			/* Configure the LED, before ensuring it starts in the off

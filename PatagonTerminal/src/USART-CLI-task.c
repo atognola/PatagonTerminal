@@ -55,7 +55,7 @@
 #include "FreeRTOS_CLI.h"
 
 /* Atmel library includes. */
-#include <freertos_uart_serial.h>
+#include <freertos_usart_serial.h>
 
 /* Demo includes. */
 #include "demo-tasks.h"
