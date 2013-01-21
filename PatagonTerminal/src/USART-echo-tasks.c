@@ -51,6 +51,7 @@
 
 /* Atmel library includes. */
 #include "freertos_usart_serial.h"
+#include "freertos_uart_serial.h"
 
 /* Demo includes. */
 #include "demo-tasks.h"
@@ -301,8 +302,15 @@ void create_usart_uart_tunnel_tasks(Usart *usart_base,
 	configASSERT(myUsart);
 	
 	/* Initialise the UART interface. */
-	Uart myUart;
-	configASSERT(uart_init(&myUart,(const struct sam_uart_opt_t *) &usart_settings));
+	freertos_peripheral_options_t uart_driver_options = {
+		uart_receive_buffer,							/* The buffer used internally by the USART driver to store incoming characters. */
+		RX_BUFFER_SIZE,									/* The size of the buffer provided to the USART driver to store incoming characters. */
+		configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY,	/* The priority used by the USART interrupts. */
+		USART_RS232,									/* Configure the USART for RS232 operation. */
+		(USE_TX_ACCESS_MUTEX | USE_RX_ACCESS_MUTEX)
+	};
+	freertos_uart_if myUart = freertos_uart_serial_init(uart_base,(const sam_uart_opt_t *) &usart_settings, &uart_driver_options);
+	//configASSERT(uart_init(&myUart,(const struct sam_uart_opt_t *) &usart_settings));
 	
 	/* Success: Create the two tasks as described above. */
 	/*xTaskCreate(usart_tunnel_tx_task, (const signed char *const) "UsartTx",

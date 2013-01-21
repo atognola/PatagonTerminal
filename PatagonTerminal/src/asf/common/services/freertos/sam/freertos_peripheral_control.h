@@ -78,7 +78,15 @@
  * - freertos_usart_write_packet_async()
  * - freertos_usart_serial_read_packet()
  *
- * See \ref freertos_usart_peripheral_control_quick_start
+ * See \ref freertos_uart_peripheral_control_quick_start
+ * The following functions are provided for the UART peripheral
+ *
+ * - freertos_uart_serial_init()
+ * - freertos_uart_write_packet()
+ * - freertos_uart_write_packet_async()
+ * - freertos_uart_serial_read_packet()
+ *
+ * See \ref freertos_uart_peripheral_control_quick_start
  *
  *
  * The following functions are provided for the TWI peripheral
@@ -195,7 +203,10 @@ enum peripheral_operation_mode {
 	TWI_I2C_MASTER,
 	
 	//! No other values can be used.
-	NOT_SUPPORTED
+	NOT_SUPPORTED,
+	
+	//! Valid only for UART peripheral.
+	UART_RS232
 };
 
 /**

@@ -117,6 +117,45 @@ uint32_t uart_init(Uart *p_uart, const sam_uart_opt_t *p_uart_opt)
 }
 
 /**
+ * \brief Configure UART with the specified parameters.
+ *
+ * \note The PMC and PIOs must be configured first.
+ *
+ * \param p_uart Pointer to a UART instance.
+ * \param p_uart_opt Pointer to sam_uart_opt_t instance.
+ *
+ * \retval 0 Success.
+ * \retval 1 Bad baud rate generator value.
+ */
+uint32_t uart_init_rs232(Uart *p_uart, const sam_uart_opt_t *p_uart_opt)
+{
+	uint32_t cd = 0;
+
+	/* Reset and disable receiver & transmitter */
+	p_uart->UART_CR = UART_CR_RSTRX | UART_CR_RSTTX
+			| UART_CR_RXDIS | UART_CR_TXDIS;
+
+	/* Check and configure baudrate */
+	/* Asynchronous, no oversampling */
+	cd = (p_uart_opt->ul_mck / p_uart_opt->ul_baudrate) / UART_MCK_DIV;
+	if (cd < UART_MCK_DIV_MIN_FACTOR || cd > UART_MCK_DIV_MAX_FACTOR)
+		return 1;
+
+	p_uart->UART_BRGR = cd;
+	/* Configure mode */
+	p_uart->UART_MR = p_uart_opt->ul_mode;
+
+	/* Disable PDC channel */
+	//p_uart->UART_PTCR = UART_PTCR_RXTDIS | UART_PTCR_TXTDIS;
+	#warning Esto no es estandar, veamos si funciona!
+
+	/* Enable receiver and transmitter */
+	p_uart->UART_CR = UART_CR_RXEN | UART_CR_TXEN;
+
+	return 0;
+}
+
+/**
  * \brief Enable UART transmitter.
  *
  * \param p_uart Pointer to a UART instance.
@@ -257,6 +296,16 @@ uint32_t uart_get_interrupt_mask(Uart *p_uart)
 uint32_t uart_get_status(Uart *p_uart)
 {
 	return p_uart->UART_SR;
+}
+
+/**
+ * \brief Reset status bits (PARE, OVER, MANERR, UNRE and PXBRK in US_CSR).
+ *
+ * \param p_uart Pointer to a UART instance.
+ */
+void uart_reset_status(Uart *p_uart)
+{
+	p_uart->UART_CR = UART_CR_RSTSTA;
 }
 
 /**

@@ -1287,6 +1287,12 @@
     <Compile Include="src\asf\common\services\freertos\sam\freertos_spi_master.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\asf\common\services\freertos\sam\freertos_uart_serial.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\asf\common\services\freertos\sam\freertos_uart_serial.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\asf\common\services\freertos\sam\freertos_usart_serial.c">
       <SubType>compile</SubType>
     </Compile>

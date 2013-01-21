@@ -110,7 +110,7 @@ static const signed portBASE_TYPE xActiveStates[]
 void vParTestInitialise(void)
 {
 	
-	#ifdef LED_0_NAME||LED_1_NAME||LED_2_NAME||LED_3_NAME
+	#if defined(LED_0_NAME) || defined(LED_1_NAME) || defined(LED_2_NAME) || defined(LED_3_NAME)
 		unsigned long ul;
 		for (ul = 0; ul < partestNUM_LEDS; ul++) {
 			/* Configure the LED, before ensuring it starts in the off

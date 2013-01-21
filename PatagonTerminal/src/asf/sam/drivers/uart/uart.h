@@ -67,6 +67,7 @@ typedef struct sam_uart_opt {
 } sam_uart_opt_t;
 
 uint32_t uart_init(Uart *p_uart, const sam_uart_opt_t *p_uart_opt);
+uint32_t uart_init_rs232(Uart *p_uart, const sam_uart_opt_t *p_uart_opt);
 void uart_enable_tx(Uart *p_uart);
 void uart_disable_tx(Uart *p_uart);
 void uart_reset_tx(Uart *p_uart);
@@ -80,6 +81,7 @@ void uart_enable_interrupt(Uart *p_uart, uint32_t ul_sources);
 void uart_disable_interrupt(Uart *p_uart, uint32_t ul_sources);
 uint32_t uart_get_interrupt_mask(Uart *p_uart);
 uint32_t uart_get_status(Uart *p_uart);
+void uart_reset_status(Uart *p_uart);
 uint32_t uart_is_tx_ready(Uart *p_uart);
 uint32_t uart_is_tx_empty(Uart *p_uart);
 uint32_t uart_is_rx_ready(Uart *p_uart);

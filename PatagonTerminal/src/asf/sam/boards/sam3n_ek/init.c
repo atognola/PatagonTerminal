@@ -45,6 +45,7 @@
 #include "board.h"
 #include "conf_board.h"
 #include "gpio.h"
+#include "pmc.h"
 
 void board_init(void)
 {
@@ -174,13 +175,11 @@ void board_init(void)
 #ifdef CONF_BOARD_USART_RXD
 	/* Configure USART RXD pin */
 	gpio_configure_pin(PIN_USART0_RXD_IDX, PIN_USART0_RXD_FLAGS);
-	#warning Verificar que no esten invertidos los pines TX y RX!!!
 #endif
 
 #ifdef CONF_BOARD_USART_TXD
 	/* Configure USART TXD pin */
 	gpio_configure_pin(PIN_USART0_TXD_IDX, PIN_USART0_TXD_FLAGS);
-	#warning Verificar que no esten invertidos los pines TX y RX!!!
 #endif
 
 #ifdef CONF_BOARD_USART_CTS
