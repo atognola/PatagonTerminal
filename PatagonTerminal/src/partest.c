@@ -143,7 +143,7 @@ void vParTestInitialise(void)
 
 void vParTestSetLED(unsigned portBASE_TYPE uxLED, signed portBASE_TYPE xValue)
 {
-	#ifdef LED_0_NAME || LED_1_NAME || LED_2_NAME || LED_3_NAME
+	#if defined(LED_0_NAME) || defined(LED_1_NAME) || defined(LED_2_NAME) || defined(LED_3_NAME)
 		if (uxLED < partestNUM_LEDS) {
 			if (xValue != pdFALSE) {
 				/* Turn the LED on. */
@@ -176,7 +176,7 @@ void vParTestSetLED(unsigned portBASE_TYPE uxLED, signed portBASE_TYPE xValue)
 
 void vParTestToggleLED(unsigned portBASE_TYPE uxLED)
 {
-	#ifdef	LED_0_NAME || LED_1_NAME || LED_2_NAME || LED_3_NAME
+	#if	defined(LED_0_NAME) || defined(LED_1_NAME) || defined(LED_2_NAME) || defined(LED_3_NAME)
 		if (uxLED < partestNUM_LEDS) {
 			taskENTER_CRITICAL();
 			{
