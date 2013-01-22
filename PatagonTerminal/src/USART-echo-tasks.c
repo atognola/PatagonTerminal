@@ -281,8 +281,8 @@ void create_usart_uart_tunnel_tasks(Usart *usart_base,
 		uint16_t uart_stack_depth_words,
 		unsigned portBASE_TYPE task_priority)
 {
+	tunnel_serial_ports_t tunnel_serial_ports;
 	/* Initialise the USART interface. */
-	freertos_usart_if myUsart;
 	freertos_peripheral_options_t usart_driver_options = {
 		usart_receive_buffer,							/* The buffer used internally by the USART driver to store incoming characters. */
 		RX_BUFFER_SIZE,									/* The size of the buffer provided to the USART driver to store incoming characters. */
@@ -298,11 +298,10 @@ void create_usart_uart_tunnel_tasks(Usart *usart_base,
 		US_MR_CHMODE_NORMAL,
 		0 /* Only used in IrDA mode. */
 	}; ///*_RB_ TODO This is not SAM specific, not a good thing. */
-	myUsart = freertos_usart_serial_init(usart_base,&usart_settings, &usart_driver_options);
-	configASSERT(myUsart);
+	tunnel_serial_ports.myUsart = freertos_usart_serial_init(usart_base,&usart_settings, &usart_driver_options);
+	configASSERT(tunnel_serial_ports.myUsart);
 	
 	/* Initialise the UART interface. */
-	freertos_uart_if myUart;
 	freertos_peripheral_options_t uart_driver_options = {
 		uart_receive_buffer,							/* The buffer used internally by the USART driver to store incoming characters. */
 		RX_BUFFER_SIZE,									/* The size of the buffer provided to the USART driver to store incoming characters. */
@@ -317,8 +316,8 @@ void create_usart_uart_tunnel_tasks(Usart *usart_base,
 		US_MR_NBSTOP_1_BIT								//Estrictamente no es necesario ...
 	}; ///*_RB_ TODO This is not SAM specific, not a good thing. */
 	#warning Chekear esto!
-	myUart = freertos_uart_serial_init(uart_base,&uart_settings, &uart_driver_options);
-	configASSERT(myUart);
+	tunnel_serial_ports.myUart = freertos_uart_serial_init(uart_base,&uart_settings, &uart_driver_options);
+	configASSERT(tunnel_serial_ports.myUart);
 	
 	/* Success: Create the two tasks as described above. */
 	/*xTaskCreate(usart_tunnel_tx_task, (const signed char *const) "UsartTx",
@@ -327,7 +326,7 @@ void create_usart_uart_tunnel_tasks(Usart *usart_base,
 	xTaskCreate(usart_tunnel_rx_task,					/* One of the tasks that implement the tunnel. */
 				(const signed char *const) "UsartRx",	/* Text name assigned to the task.  This is just to assist debugging.  The kernel does not use this name itself. */
 				usart_stack_depth_words,				/* The size of the stack allocated to the task. */
-				(void *) myUsart,						/* The parameter is used to pass the already configured USART port into the task. */
+				(void *) &tunnel_serial_ports,			/* The parameter is used to pass the already configured USART+UART ports into the task. */
 				task_priority + 1,						/* The priority allocated to the task. */
 				NULL);									/* Used to store the handle to the created task - in this case the handle is not required. */
 	/*xTaskCreate(uart_tunnel_tx_task, (const signed char *const) "UartTx",
@@ -336,7 +335,7 @@ void create_usart_uart_tunnel_tasks(Usart *usart_base,
 	xTaskCreate(uart_tunnel_rx_task,					/* One of the tasks that implement the tunnel. */
 				(const signed char *const) "UartRx",	/* Text name assigned to the task.  This is just to assist debugging.  The kernel does not use this name itself. */
 				uart_stack_depth_words,					/* The size of the stack allocated to the task. */
-				(void *) myUart,						/* The parameter is used to pass the already configured UART port into the task. */
+				(void *) &tunnel_serial_ports,			/* The parameter is used to pass the already configured UART port into the task. */
 				task_priority + 1,						/* The priority allocated to the task. */
 				NULL);									/* Used to store the handle to the created task - in this case the handle is not required. */
 }
@@ -443,7 +442,9 @@ static void usart_echo_rx_task(void *pvParameters)
 /*-----------------------------------------------------------*/
 static void usart_tunnel_tx_task(void *pvParameters)
 {
+	tunnel_serial_ports_t *tunnel_serial_ports;
 	freertos_usart_if usart_port;
+	freertos_uart_if uart_port;
 	static uint8_t local_buffer[RX_BUFFER_SIZE];
 	const portTickType time_out_definition = (100UL / portTICK_RATE_MS),
 			short_delay = (10UL / portTICK_RATE_MS);
@@ -457,8 +458,10 @@ static void usart_tunnel_tx_task(void *pvParameters)
 		configASSERT(strlen((char *) echo_strings[string_index]) <= RX_BUFFER_SIZE);
 	}*/
 
-	/* The (already open) USART port is passed in as the task parameter. */
-	usart_port = (freertos_usart_if)pvParameters;
+	/* The (already open) USART+UART ports are passed in as the task parameter. */
+	tunnel_serial_ports= (tunnel_serial_ports_t *)pvParameters;
+	usart_port = tunnel_serial_ports->myUsart;
+	uart_port = tunnel_serial_ports->myUart;
 
 	/* Create the semaphore to be used to get notified of end of
 	transmissions. */
@@ -502,19 +505,22 @@ static void usart_tunnel_tx_task(void *pvParameters)
 /*-----------------------------------------------------------*/
 static void usart_tunnel_rx_task(void *pvParameters)
 {
-	freertos_usart_if		myUsart;													//Board USART
-	Uart					myUart;														//Board UART
+	tunnel_serial_ports_t	*tunnel_serial_ports;
+	freertos_usart_if		usart_port;
+	freertos_uart_if		uart_port;
 	static uint8_t			rx_buffer[RX_BUFFER_SIZE];
 	uint32_t				received;
 	unsigned portBASE_TYPE	string_index;
 
-	/* The (already open) USART port is passed in as the task parameter. */
-	myUsart = (freertos_usart_if)pvParameters;
-	//myUart = popo;
+	/* The (already open) USART+UART ports are passed in as the task parameter. */
+	tunnel_serial_ports= (tunnel_serial_ports_t *)pvParameters;
+	usart_port = tunnel_serial_ports->myUsart;
+	uart_port = tunnel_serial_ports->myUart;
+	
 	memset(rx_buffer, 0x00, sizeof(rx_buffer));
 	
 	for (;;) {
-		if(uart_is_tx_ready(&myUart)==1)
+		/*if(uart_is_tx_ready(&myUart)==1)
 		{
 			received = freertos_usart_serial_read_packet(myUsart, rx_buffer,RX_BUFFER_SIZE,portMAX_DELAY);
 			if(received!=0){
@@ -524,7 +530,9 @@ static void usart_tunnel_rx_task(void *pvParameters)
 			}
 		} else {
 			vTaskDelay(1/portTICK_RATE_MS);
-		}
+		}*/
+		
+		//Recibe en la USART y forwardea por la UART
 
 		/* Increment a loop counter as an indication that this task is still
 		actually receiving strings. */
@@ -537,10 +545,17 @@ static void usart_tunnel_rx_task(void *pvParameters)
 /*-----------------------------------------------------------*/
 static void uart_tunnel_rx_task(void *pvParameters)
 {
+	tunnel_serial_ports_t *tunnel_serial_ports;
 	freertos_usart_if usart_port;
+	freertos_uart_if uart_port;
 	static uint8_t rx_buffer[RX_BUFFER_SIZE];
 	uint32_t received;
 	unsigned portBASE_TYPE string_index;
+	
+	/* The (already open) USART+UART ports are passed in as the task parameter. */
+	tunnel_serial_ports= (tunnel_serial_ports_t *)pvParameters;
+	usart_port = tunnel_serial_ports->myUsart;
+	uart_port = tunnel_serial_ports->myUart;
 
 	//Stub Implementation
 	//Must receive from UART and forward it through the UART

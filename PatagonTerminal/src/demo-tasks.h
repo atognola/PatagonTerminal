@@ -49,6 +49,8 @@
 #define RX_BUFFER_SIZE_BYTES    (50)
 
 #include "conf_example.h"
+#include "freertos_usart_serial.h"
+#include "freertos_uart_serial.h"
 
 void vRegisterCLICommands(void);
 
@@ -68,6 +70,11 @@ portBASE_TYPE are_usart_echo_tasks_still_running(void);
 #include "uart.h"
 void create_usart_uart_tunnel_tasks(Usart *pxUsart,uint16_t usart_stack_depth_words,
 		Uart *pxUart, uint16_t uart_stack_depth_words, unsigned portBASE_TYPE task_priority);
+typedef struct  
+{
+	freertos_usart_if myUsart;
+	freertos_uart_if myUart;
+} tunnel_serial_ports_t;
 #endif
 
 #if (defined confINCLUDE_CDC_CLI)
