@@ -302,23 +302,23 @@ void create_usart_uart_tunnel_tasks(Usart *usart_base,
 	configASSERT(myUsart);
 	
 	/* Initialise the UART interface. */
+	freertos_uart_if myUart;
 	freertos_peripheral_options_t uart_driver_options = {
 		uart_receive_buffer,							/* The buffer used internally by the USART driver to store incoming characters. */
 		RX_BUFFER_SIZE,									/* The size of the buffer provided to the USART driver to store incoming characters. */
 		configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY,	/* The priority used by the USART interrupts. */
-		USART_RS232,									/* Configure the USART for RS232 operation. */
+		UART_RS232, 									/* Configure the USART for RS232 operation. */
 		(USE_TX_ACCESS_MUTEX | USE_RX_ACCESS_MUTEX)
 	};
-	const sam_uart_opt_t uart_settings = {
+	usart_serial_options_t uart_settings = {
 		USART_BAUD_RATE,
-		UART_MR_CHRL_8_BIT,
+		US_MR_CHRL_8_BIT,								//Estrictamente no es necesario ...
 		UART_MR_PAR_NO,
-		UART_MR_NBSTOP_1_BIT,
-		UART_MR_CHMODE_NORMAL,
-		0 /* Only used in IrDA mode. */
+		US_MR_NBSTOP_1_BIT								//Estrictamente no es necesario ...
 	}; ///*_RB_ TODO This is not SAM specific, not a good thing. */
-	freertos_uart_if myUart = freertos_uart_serial_init(uart_base,(const sam_uart_opt_t *) &uart_settings, &uart_driver_options);
-	//configASSERT(uart_init(&myUart,(const struct sam_uart_opt_t *) &usart_settings));
+	#warning Chekear esto!
+	myUart = freertos_uart_serial_init(uart_base,&uart_settings, &uart_driver_options);
+	configASSERT(myUart);
 	
 	/* Success: Create the two tasks as described above. */
 	/*xTaskCreate(usart_tunnel_tx_task, (const signed char *const) "UsartTx",
@@ -336,7 +336,7 @@ void create_usart_uart_tunnel_tasks(Usart *usart_base,
 	xTaskCreate(uart_tunnel_rx_task,					/* One of the tasks that implement the tunnel. */
 				(const signed char *const) "UartRx",	/* Text name assigned to the task.  This is just to assist debugging.  The kernel does not use this name itself. */
 				uart_stack_depth_words,					/* The size of the stack allocated to the task. */
-				(void *) &myUart,						/* The parameter is used to pass the already configured UART port into the task. */
+				(void *) myUart,						/* The parameter is used to pass the already configured UART port into the task. */
 				task_priority + 1,						/* The priority allocated to the task. */
 				NULL);									/* Used to store the handle to the created task - in this case the handle is not required. */
 }

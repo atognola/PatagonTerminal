@@ -80,7 +80,7 @@
 typedef void *freertos_uart_if;
 
 freertos_uart_if freertos_uart_serial_init(Uart *p_uart,
-		const sam_uart_opt_t *const uart_parameters,
+		usart_serial_options_t *uart_parameters,
 		const freertos_peripheral_options_t *const freertos_driver_parameters);
 
 status_code_t freertos_uart_write_packet_async(freertos_uart_if p_uart,
@@ -272,7 +272,7 @@ uint32_t freertos_uart_serial_read_packet(freertos_uart_if p_uart,
  *      US_MR_NBSTOP_1_BIT,
  *      US_MR_CHMODE_NORMAL,
  *      0 // Only used in IrDA mode, so all values are ignored.
- *  };		Todavía por editar!!
+ *  };
  *
  * /////////////////////////////////////////////////////////////////////////////
  * // Call the UART specific FreeRTOS ASF driver initialization function,

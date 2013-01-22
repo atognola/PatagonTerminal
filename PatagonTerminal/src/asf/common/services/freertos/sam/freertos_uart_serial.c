@@ -173,7 +173,7 @@ static const freertos_pdc_peripheral_parameters_t all_uart_definitions[MAX_UARTS
  *     the initialisation fails then NULL is returned.
  */
 freertos_uart_if freertos_uart_serial_init(Uart *p_uart,
-		const sam_uart_opt_t *const uart_parameters,
+		usart_serial_options_t *uart_parameters,
 		const freertos_peripheral_options_t *const freertos_driver_parameters)
 {
 	portBASE_TYPE uart_index;
@@ -211,16 +211,9 @@ freertos_uart_if freertos_uart_serial_init(Uart *p_uart,
 		pmc_enable_periph_clk(
 				all_uart_definitions[uart_index].peripheral_id);
 
-		switch (freertos_driver_parameters->operation_mode) {
-		case UART_RS232:
-			/* Call the standard ASF init function. */
-			uart_init_rs232(p_uart, uart_parameters);
-			break;
-
-		default:
-			/* Other modes are not currently supported. */
-			break;
-		}
+		/* Call the standard ASF init function. */
+		usart_serial_init((usart_if) &(all_uart_definitions[uart_index].peripheral_base_address),
+							  uart_parameters);
 
 		/* Disable all the interrupts. */
 		uart_disable_interrupt(p_uart, MASK_ALL_INTERRUPTS);
