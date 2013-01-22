@@ -309,7 +309,15 @@ void create_usart_uart_tunnel_tasks(Usart *usart_base,
 		USART_RS232,									/* Configure the USART for RS232 operation. */
 		(USE_TX_ACCESS_MUTEX | USE_RX_ACCESS_MUTEX)
 	};
-	freertos_uart_if myUart = freertos_uart_serial_init(uart_base,(const sam_uart_opt_t *) &usart_settings, &uart_driver_options);
+	const sam_uart_opt_t uart_settings = {
+		USART_BAUD_RATE,
+		UART_MR_CHRL_8_BIT,
+		UART_MR_PAR_NO,
+		UART_MR_NBSTOP_1_BIT,
+		UART_MR_CHMODE_NORMAL,
+		0 /* Only used in IrDA mode. */
+	}; ///*_RB_ TODO This is not SAM specific, not a good thing. */
+	freertos_uart_if myUart = freertos_uart_serial_init(uart_base,(const sam_uart_opt_t *) &uart_settings, &uart_driver_options);
 	//configASSERT(uart_init(&myUart,(const struct sam_uart_opt_t *) &usart_settings));
 	
 	/* Success: Create the two tasks as described above. */

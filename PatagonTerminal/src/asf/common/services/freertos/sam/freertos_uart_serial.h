@@ -272,7 +272,7 @@ uint32_t freertos_uart_serial_read_packet(freertos_uart_if p_uart,
  *      US_MR_NBSTOP_1_BIT,
  *      US_MR_CHMODE_NORMAL,
  *      0 // Only used in IrDA mode, so all values are ignored.
- *  };
+ *  };		Todavía por editar!!
  *
  * /////////////////////////////////////////////////////////////////////////////
  * // Call the UART specific FreeRTOS ASF driver initialization function,
