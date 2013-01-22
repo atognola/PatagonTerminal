@@ -439,6 +439,14 @@ static void prvLEDTimerCallback(void *pvParameters)
 		}
 	}
 	#endif /* confINCLUDE_USART_ECHO_TASKS */
+	
+	#if (defined confINCLUDE_USART_UART_TUNNEL)
+	{
+		if (are_tunnel_tasks_still_running() != pdPASS) {
+			xStatus = pdFAIL;
+		}
+	}
+	#endif /* confINCLUDE_USART_ECHO_TASKS */
 
 	#if (defined confINCLUDE_SPI_FLASH_TASK)
 	{

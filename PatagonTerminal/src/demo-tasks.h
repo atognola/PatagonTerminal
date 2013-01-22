@@ -70,6 +70,7 @@ portBASE_TYPE are_usart_echo_tasks_still_running(void);
 #include "uart.h"
 void create_usart_uart_tunnel_tasks(Usart *pxUsart,uint16_t usart_stack_depth_words,
 		Uart *pxUart, uint16_t uart_stack_depth_words, unsigned portBASE_TYPE task_priority);
+portBASE_TYPE are_tunnel_tasks_still_running(void);
 typedef struct  
 {
 	freertos_usart_if myUsart;

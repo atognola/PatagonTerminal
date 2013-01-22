@@ -100,14 +100,21 @@ static void usart_tunnel_tx_task(void *pvParameters);
 static void usart_tunnel_rx_task(void *pvParameters);
 static void uart_tunnel_tx_task(void *pvParameters);
 static void uart_tunnel_rx_task(void *pvParameters);
+
+/* Counts the number of times the Rx task receives a string.  The count is used
+to ensure the task is still executing. */
+static uint32_t usart_rx_task_loops = 0UL;
+static uint32_t uart_rx_task_loops = 0UL;
+
 #endif
 /*-----------------------------------------------------------*/
+
+#if defined confINCLUDE_USART_ECHO_TASKS
 
 /* Counts the number of times the Rx task receives a string.  The count is used
 to ensure the task is still executing. */
 static uint32_t rx_task_loops = 0UL;
 
-#if defined confINCLUDE_USART_ECHO_TASKS
 /* The array of strings that are sent by the Tx task, and therefore received by
 the Rx task. */
 const uint8_t *echo_strings[] =
@@ -510,14 +517,27 @@ static void usart_tunnel_rx_task(void *pvParameters)
 	freertos_uart_if		uart_port;
 	static uint8_t			rx_buffer[RX_BUFFER_SIZE];
 	uint32_t				received;
-	unsigned portBASE_TYPE	string_index;
+	const portTickType		time_out_definition = (100UL / portTICK_RATE_MS),
+							short_delay = (10UL / portTICK_RATE_MS);
+	xSemaphoreHandle		notification_semaphore;
+	status_code_t returned_status;
 
 	/* The (already open) USART+UART ports are passed in as the task parameter. */
 	tunnel_serial_ports= (tunnel_serial_ports_t *)pvParameters;
 	usart_port = tunnel_serial_ports->myUsart;
 	uart_port = tunnel_serial_ports->myUart;
 	
+	/* Create the semaphore to be used to get notified of end of
+	transmissions. */
+	vSemaphoreCreateBinary(notification_semaphore);
+	configASSERT(notification_semaphore);
+	/* Clear memory buffer */
 	memset(rx_buffer, 0x00, sizeof(rx_buffer));
+	
+	/* Start with the semaphore in the expected state - no data has been sent
+	yet.  A block time of zero is used as the semaphore is guaranteed to be
+	there as it has only just been created. */
+	xSemaphoreTake(notification_semaphore, 0);
 	
 	for (;;) {
 		/*if(uart_is_tx_ready(&myUart)==1)
@@ -533,10 +553,24 @@ static void usart_tunnel_rx_task(void *pvParameters)
 		}*/
 		
 		//Recibe en la USART y forwardea por la UART
+		if((received = freertos_usart_serial_read_packet(usart_port, rx_buffer,RX_BUFFER_SIZE,portMAX_DELAY))!=0)
+		{
+			/* Start send. */
+			returned_status = freertos_usart_write_packet_async(uart_port,
+			rx_buffer, received,time_out_definition, notification_semaphore);
+			configASSERT(returned_status == STATUS_OK);
+			
+			/* The async version of the write function is being used, so wait for
+			the end of the transmission.  No CPU time is used while waiting for the
+			semaphore.*/
+			xSemaphoreTake(notification_semaphore, time_out_definition * 2);
+		} else {
+			vTaskDelay(short_delay);
+		}
 
 		/* Increment a loop counter as an indication that this task is still
 		actually receiving strings. */
-		rx_task_loops++;
+		usart_rx_task_loops++;
 	}
 }
 #endif
@@ -545,25 +579,72 @@ static void usart_tunnel_rx_task(void *pvParameters)
 /*-----------------------------------------------------------*/
 static void uart_tunnel_rx_task(void *pvParameters)
 {
-	tunnel_serial_ports_t *tunnel_serial_ports;
-	freertos_usart_if usart_port;
-	freertos_uart_if uart_port;
-	static uint8_t rx_buffer[RX_BUFFER_SIZE];
-	uint32_t received;
-	unsigned portBASE_TYPE string_index;
+	tunnel_serial_ports_t	*tunnel_serial_ports;
+	freertos_usart_if		usart_port;
+	freertos_uart_if		uart_port;
+	static uint8_t			rx_buffer[RX_BUFFER_SIZE];
+	uint32_t				received;
+	const portTickType		time_out_definition = (100UL / portTICK_RATE_MS),
+	short_delay = (10UL / portTICK_RATE_MS);
+	xSemaphoreHandle		notification_semaphore;
+	status_code_t returned_status;
 	
 	/* The (already open) USART+UART ports are passed in as the task parameter. */
 	tunnel_serial_ports= (tunnel_serial_ports_t *)pvParameters;
 	usart_port = tunnel_serial_ports->myUsart;
 	uart_port = tunnel_serial_ports->myUart;
 
-	//Stub Implementation
-	//Must receive from UART and forward it through the UART
+	/* Create the semaphore to be used to get notified of end of
+	transmissions. */
+	vSemaphoreCreateBinary(notification_semaphore);
+	configASSERT(notification_semaphore);
+	/* Clear memory buffer */
+	memset(rx_buffer, 0x00, sizeof(rx_buffer));
+	
+	/* Start with the semaphore in the expected state - no data has been sent
+	yet.  A block time of zero is used as the semaphore is guaranteed to be
+	there as it has only just been created. */
+	xSemaphoreTake(notification_semaphore, 0);
+	
+	for (;;) {
+		/*if(uart_is_tx_ready(&myUart)==1)
+		{
+			received = freertos_usart_serial_read_packet(myUsart, rx_buffer,RX_BUFFER_SIZE,portMAX_DELAY);
+			if(received!=0){
+				#warning Esto esta incompleto!
+				//uart_write(&myUart,rx_buffer);
+				memset(rx_buffer, 0x00, sizeof(rx_buffer));
+			}
+		} else {
+			vTaskDelay(1/portTICK_RATE_MS);
+		}*/
+		
+		//Recibe en la UART y forwardea por la USART
+		if((received = freertos_usart_serial_read_packet(uart_port, rx_buffer,RX_BUFFER_SIZE,portMAX_DELAY))!=0)
+		{
+			/* Start send. */
+			returned_status = freertos_usart_write_packet_async(usart_port,
+			rx_buffer, received,time_out_definition, notification_semaphore);
+			configASSERT(returned_status == STATUS_OK);
+			
+			/* The async version of the write function is being used, so wait for
+			the end of the transmission.  No CPU time is used while waiting for the
+			semaphore.*/
+			xSemaphoreTake(notification_semaphore, time_out_definition * 2);
+		} else {
+			vTaskDelay(short_delay);
+		}
+
+		/* Increment a loop counter as an indication that this task is still
+		actually receiving strings. */
+		uart_rx_task_loops++;
+	}
 }
 #endif
 
 /*-----------------------------------------------------------*/
 
+#ifdef confINCLUDE_USART_ECHO_TASKS
 portBASE_TYPE are_usart_echo_tasks_still_running(void)
 {
 	static uint32_t last_loop_count = 0;
@@ -579,5 +660,28 @@ portBASE_TYPE are_usart_echo_tasks_still_running(void)
 
 	return return_value;
 }
+#endif
+
+/*-----------------------------------------------------------*/
+
+#ifdef confINCLUDE_USART_UART_TUNNEL
+portBASE_TYPE are_tunnel_tasks_still_running(void)
+{
+	portBASE_TYPE return_value = pdPASS;
+	static uint32_t usart_rx_last_loop_count = 0;
+	static uint32_t uart_rx_last_loop_count = 0;
+
+	/* Ensure the count of Rx loops is still incrementing. */
+	if (usart_rx_last_loop_count == usart_rx_task_loops || uart_rx_last_loop_count == uart_rx_task_loops) {
+		/* The Rx task has somehow stalled, set the error LED. */
+		return_value = pdFAIL;
+	}
+
+	usart_rx_last_loop_count = usart_rx_task_loops;
+	uart_rx_last_loop_count = uart_rx_task_loops;
+
+	return return_value;
+}
+#endif
 
 /*-----------------------------------------------------------*/
