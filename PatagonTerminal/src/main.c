@@ -267,6 +267,7 @@
 
 /* ASF includes. */
 #include "sysclk.h"
+#include "asf.h"
 
 /* Defines the LED toggled to provide visual feedback that the system is
  * running.  The rate is defined in milliseconds, then converted to RTOS ticks
@@ -353,6 +354,21 @@ int main(void)
 	will not actually start until the FreeRTOS kernel is started. */
 	configASSERT(xLEDTimer);
 	xTimerStart(xLEDTimer, mainDONT_BLOCK);
+	
+	/* Output demo infomation. */
+	printf("-- Patagon Terminal --\n\r");
+	printf("-- Compiled: %s %s --\n\r", __DATE__, __TIME__);
+	
+	/* Create the example tasks as per the configuration settings.
+	See the comments at the top of this file. */
+	#if (defined confINCLUDE_USART_UART_TUNNEL)
+	{
+		create_usart_uart_tunnel_tasks(BOARD_USART,								//BOARD_USART points to the USART periph
+		mainUSART_TUNNEL_TASK_STACK_SIZE,
+		mainUART_TUNNEL_TASK_STACK_SIZE,
+		mainUSART_ECHO_TASK_PRIORITY);
+	}
+	#endif /* confINCLUDE_USART_ECHO_TASKS */
 
 	/* Create the example tasks as per the configuration settings.
 	See the comments at the top of this file. */
@@ -361,18 +377,6 @@ int main(void)
 		create_usart_echo_test_tasks(BOARD_USART,
 				mainUSART_ECHO_TASK_STACK_SIZE,
 				mainUSART_ECHO_TASK_PRIORITY);
-	}
-	#endif /* confINCLUDE_USART_ECHO_TASKS */
-	
-	/* Create the example tasks as per the configuration settings.
-	See the comments at the top of this file. */
-	#if (defined confINCLUDE_USART_UART_TUNNEL)
-	{
-		create_usart_uart_tunnel_tasks(BOARD_USART,								//BOARD_USART points to the USART periph
-		mainUSART_TUNNEL_TASK_STACK_SIZE,
-		BOARD_UART0,															//BOARD_UART0 points to the UART0 periph
-		mainUART_TUNNEL_TASK_STACK_SIZE,
-		mainUSART_ECHO_TASK_PRIORITY);
 	}
 	#endif /* confINCLUDE_USART_ECHO_TASKS */
 
@@ -439,14 +443,6 @@ static void prvLEDTimerCallback(void *pvParameters)
 		}
 	}
 	#endif /* confINCLUDE_USART_ECHO_TASKS */
-	
-	#if (defined confINCLUDE_USART_UART_TUNNEL)
-	{
-		if (are_tunnel_tasks_still_running() != pdPASS) {
-			xStatus = pdFAIL;
-		}
-	}
-	#endif /* confINCLUDE_USART_ECHO_TASKS */
 
 	#if (defined confINCLUDE_SPI_FLASH_TASK)
 	{
@@ -473,6 +469,30 @@ static void prvLEDTimerCallback(void *pvParameters)
 	vParTestToggleLED(mainSOFTWARE_TIMER_LED);
 }
 
+/**
+ * \brief Configure the console UART.
+ */
+static void configure_console(void)
+{
+	const usart_serial_options_t uart_serial_options = {
+		.baudrate = CONF_UART_BAUDRATE,
+		.paritytype = CONF_UART_PARITY
+	};
+	
+	/* Configure console UART. */
+	sysclk_enable_peripheral_clock(CONSOLE_UART_ID);
+	stdio_serial_init(CONF_UART, &uart_serial_options);
+
+	/* Specify that stdout should not be buffered. */
+	//#if defined(__GNUC__)
+		//setbuf(stdout, NULL);
+	//#else
+	/* Already the case in IAR's Normal DLIB default configuration: printf()
+	 * emits one character at a time.
+	 */
+	//#endif
+}
+
 /*-----------------------------------------------------------*/
 
 static void prvSetupHardware(void)
@@ -488,6 +508,9 @@ static void prvSetupHardware(void)
 
 	/* Perform any initialisation required by the partest LED IO functions. */
 	vParTestInitialise();
+	
+	/* Initialize the console uart */
+	configure_console();
 }
 
 /*-----------------------------------------------------------*/
