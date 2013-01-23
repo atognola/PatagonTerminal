@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Atmel Studio Solution File, Format Version 11.00
 Project("{54F91283-7BC4-4236-8FF9-10F437C3AD48}") = "PatagonTerminal", "PatagonTerminal\PatagonTerminal.cproj", "{BAAE895E-1A2C-4018-BD62-85DAF3FD7559}"
 EndProject
+Project("{54F91283-7BC4-4236-8FF9-10F437C3AD48}") = "BlinkyBlink", "..\..\Atmel Studio\BlinkyBlink\BlinkyBlink.cproj", "{E0E65F13-CB29-4B4F-B9C0-9B2A02913C9D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM = Debug|ARM
@@ -13,6 +15,10 @@ Global
 		{BAAE895E-1A2C-4018-BD62-85DAF3FD7559}.Debug|ARM.Build.0 = Debug|ARM
 		{BAAE895E-1A2C-4018-BD62-85DAF3FD7559}.Release|ARM.ActiveCfg = Release|ARM
 		{BAAE895E-1A2C-4018-BD62-85DAF3FD7559}.Release|ARM.Build.0 = Release|ARM
+		{E0E65F13-CB29-4B4F-B9C0-9B2A02913C9D}.Debug|ARM.ActiveCfg = Debug|ARM
+		{E0E65F13-CB29-4B4F-B9C0-9B2A02913C9D}.Debug|ARM.Build.0 = Debug|ARM
+		{E0E65F13-CB29-4B4F-B9C0-9B2A02913C9D}.Release|ARM.ActiveCfg = Release|ARM
+		{E0E65F13-CB29-4B4F-B9C0-9B2A02913C9D}.Release|ARM.Build.0 = Release|ARM
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

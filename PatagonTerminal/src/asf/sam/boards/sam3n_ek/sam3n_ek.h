@@ -492,6 +492,9 @@
 #define CONSOLE_UART               UART0
 #define CONSOLE_UART_ID            ID_UART0
 
+#define	SIM900_USART			   USART0
+#define SIM900_USART_ID			   ID_USART0
+
 /* RE pin. */
 #define PIN_RE_IDX                 PIN_USART0_CTS_IDX
 #define PIN_RE_FLAGS               (PIO_OUTPUT_0 | PIO_DEFAULT)

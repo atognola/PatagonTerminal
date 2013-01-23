@@ -456,7 +456,6 @@ static void usart_tunnel_tx_task(void *pvParameters)
 	const portTickType time_out_definition = (100UL / portTICK_RATE_MS),
 			short_delay = (10UL / portTICK_RATE_MS);
 	xSemaphoreHandle notification_semaphore;
-	unsigned portBASE_TYPE string_index;
 	status_code_t returned_status;
 
 	/* Check the strings being sent fit in the buffers provided. */
@@ -479,8 +478,6 @@ static void usart_tunnel_tx_task(void *pvParameters)
 	yet.  A block time of zero is used as the semaphore is guaranteed to be
 	there as it has only just been created. */
 	xSemaphoreTake(notification_semaphore, 0);
-
-	string_index = 0;
 
 	for (;;) {
 		/* Data cannot be sent from Flash, so copy the string to RAM. */
@@ -601,10 +598,22 @@ static void uart_tunnel_rx_task(void *pvParameters)
 	/* Clear memory buffer */
 	memset(rx_buffer, 0x00, sizeof(rx_buffer));
 	
+	rx_buffer[8]="Patagon";
+	
 	/* Start with the semaphore in the expected state - no data has been sent
 	yet.  A block time of zero is used as the semaphore is guaranteed to be
 	there as it has only just been created. */
 	xSemaphoreTake(notification_semaphore, 0);
+	
+	/* Para debug */
+	freertos_usart_write_packet_async(usart_port,
+			rx_buffer, received,time_out_definition, notification_semaphore);
+			configASSERT(returned_status == STATUS_OK);
+			
+	/* The async version of the write function is being used, so wait for
+	the end of the transmission.  No CPU time is used while waiting for the
+	semaphore.*/
+	xSemaphoreTake(notification_semaphore, time_out_definition * 2);
 	
 	for (;;) {
 		/*if(uart_is_tx_ready(&myUart)==1)
