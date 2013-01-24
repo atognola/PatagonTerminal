@@ -54,6 +54,7 @@
 
 /* Demo includes. */
 #include "demo-tasks.h"
+#include <gpio.h>
 
 #ifndef	RX_BUFFER_SIZE
 #define RX_BUFFER_SIZE          (79)
@@ -315,7 +316,7 @@ void create_usart_uart_tunnel_tasks(Usart *usart_base,
 				(const signed char *const) "UartRx",	/* Text name assigned to the task.  This is just to assist debugging.  The kernel does not use this name itself. */
 				uart_stack_depth_words,					/* The size of the stack allocated to the task. */
 				(void *) myUsart,						/* The parameter is used to pass the already configured UART port into the task. */
-				task_priority + 1,						/* The priority allocated to the task. */
+				task_priority + 2,						/* The priority allocated to the task. */
 				NULL);									/* Used to store the handle to the created task - in this case the handle is not required. */
 	/*xTaskCreate(usart_tunnel_tx_task, (const signed char *const) "UsartTx",
 	usart_stack_depth_words, (void *) freertos_usart,
@@ -324,7 +325,7 @@ void create_usart_uart_tunnel_tasks(Usart *usart_base,
 				(const signed char *const) "UsartRx",	/* Text name assigned to the task.  This is just to assist debugging.  The kernel does not use this name itself. */
 				usart_stack_depth_words,				/* The size of the stack allocated to the task. */
 				(void *) myUsart,						/* The parameter is used to pass the already configured USART+UART ports into the task. */
-				task_priority + 1,						/* The priority allocated to the task. */
+				task_priority + 2,						/* The priority allocated to the task. */
 				NULL);									/* Used to store the handle to the created task - in this case the handle is not required. */
 }
 #endif
@@ -499,18 +500,36 @@ static void uart_tunnel_rx_task(void *pvParameters)
 		{
 			rx_buffer[i]=rx_char;
 			i=i+1;
-			if(rx_char==10)									//Must send!
+			if(rx_char==10)										//Newline character received, therefore, must send!
 			{
-				rx_buffer[i]=0;								//Terminador
-				/* Start send. */
-				returned_status = freertos_usart_write_packet_async(usart_port,
-				rx_buffer, i,time_out_definition, notification_semaphore);
-				configASSERT(returned_status == STATUS_OK);
-				/* The async version of the write function is being used, so wait for
-				the end of the transmission.  No CPU time is used while waiting for the
-				semaphore.*/
-				xSemaphoreTake(notification_semaphore, time_out_definition * 2);
-				i=0;
+				if(rx_buffer[0]==COMMAND_HEADER) {
+					//Terminal command received
+					if((rx_buffer[1]=='O')&&(rx_buffer[2]=='N')) {
+						putchar('O');
+						putchar('n');
+						putchar('S');
+						putchar('i');
+						putchar('m');
+						//xTaskCreate(turn_on_sim,				/* One of the tasks that implement the tunnel. */
+						//(const signed char *const) "SimPowerOn",/* Text name assigned to the task.  This is just to assist debugging.  The kernel does not use this name itself. */
+						//configMINIMAL_STACK_SIZE,				/* The size of the stack allocated to the task. */
+						//(void *) i,									/* The parameter is used to pass the already configured USART+UART ports into the task. */
+						//tskIDLE_PRIORITY+1,						/* The priority allocated to the task. */
+						//NULL);									/* Used to store the handle to the created task - in this case the handle is not required. */
+						
+					}
+					i=0;
+				} else {
+					//Text received
+					returned_status = freertos_usart_write_packet_async(usart_port,						/* Start send. */
+					rx_buffer, i,time_out_definition, notification_semaphore);
+					configASSERT(returned_status == STATUS_OK);
+					/* The async version of the write function is being used, so wait for
+					the end of the transmission.  No CPU time is used while waiting for the
+					semaphore.*/
+					xSemaphoreTake(notification_semaphore, time_out_definition * 2);
+					i=0;
+				}				
 			}
 		}
 		
@@ -538,6 +557,20 @@ portBASE_TYPE are_usart_echo_tasks_still_running(void)
 	last_loop_count = rx_task_loops;
 
 	return return_value;
+}
+#endif
+
+/*-----------------------------------------------------------*/
+
+#ifdef confINCLUDE_USART_UART_TUNNEL
+void turn_on_sim(void *pvParameters)
+{
+	//set pin low
+	gpio_set_pin_low(SIM_PWR);
+	vTaskDelay(SIM_PWR_SEQUENCE);
+	//set pin high
+	gpio_set_pin_high(SIM_PWR);
+	vTaskDelete(NULL);
 }
 #endif
 

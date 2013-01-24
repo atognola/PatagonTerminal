@@ -68,9 +68,12 @@ portBASE_TYPE are_usart_echo_tasks_still_running(void);
 #if (defined confINCLUDE_USART_UART_TUNNEL)
 #include "usart.h"
 #include "uart.h"
+#define COMMAND_HEADER		'#'
+#define SIM_PWR_SEQUENCE	1000/portTICK_RATE_MS
 void create_usart_uart_tunnel_tasks(Usart *pxUsart,uint16_t usart_stack_depth_words,
 uint16_t uart_stack_depth_words,unsigned portBASE_TYPE task_priority);
 portBASE_TYPE are_tunnel_tasks_still_running(void);
+void turn_on_sim(void *pvParameters);
 typedef struct  
 {
 	freertos_usart_if myUsart;
