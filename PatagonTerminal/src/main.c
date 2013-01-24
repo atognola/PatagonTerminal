@@ -484,13 +484,13 @@ static void configure_console(void)
 	stdio_serial_init(CONF_UART, &uart_serial_options);
 
 	/* Specify that stdout should not be buffered. */
-	//#if defined(__GNUC__)
-		//setbuf(stdout, NULL);
-	//#else
+	#if defined(__GNUC__)
+		setbuf(stdout, NULL);										//Buffered and unbuffered modes were tested and worked
+	#else
 	/* Already the case in IAR's Normal DLIB default configuration: printf()
 	 * emits one character at a time.
 	 */
-	//#endif
+	#endif
 }
 
 /*-----------------------------------------------------------*/
