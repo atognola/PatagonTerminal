@@ -98,9 +98,7 @@ static void usart_echo_rx_task(void *pvParameters);
  * error is latched if any characters are missing.  A loopback connector is
  * required to ensure the transmitted characters are also received.
  */
-static void usart_tunnel_tx_task(void *pvParameters);
 static void usart_tunnel_rx_task(void *pvParameters);
-static void uart_tunnel_tx_task(void *pvParameters);
 static void uart_tunnel_rx_task(void *pvParameters);
 
 /* Counts the number of times the Rx task receives a string.  The count is used
@@ -430,56 +428,6 @@ static void usart_echo_rx_task(void *pvParameters)
 
 #if defined confINCLUDE_USART_UART_TUNNEL
 /*-----------------------------------------------------------*/
-static void usart_tunnel_tx_task(void *pvParameters)
-{
-	freertos_usart_if usart_port;
-	static uint8_t local_buffer[RX_BUFFER_SIZE];
-	const portTickType time_out_definition = (100UL / portTICK_RATE_MS),
-			short_delay = (10UL / portTICK_RATE_MS);
-	xSemaphoreHandle notification_semaphore;
-	status_code_t returned_status;
-
-	/* The (already open) USART port is passed in as the task parameter. */
-	usart_port = (freertos_usart_if)pvParameters;
-
-	/* Create the semaphore to be used to get notified of end of
-	transmissions. */
-	vSemaphoreCreateBinary(notification_semaphore);
-	configASSERT(notification_semaphore);
-
-	/* Start with the semaphore in the expected state - no data has been sent
-	yet.  A block time of zero is used as the semaphore is guaranteed to be
-	there as it has only just been created. */
-	xSemaphoreTake(notification_semaphore, 0);
-
-	for (;;) {
-		/* Data cannot be sent from Flash, so copy the string to RAM. */
-		/*strcpy((char *) local_buffer,
-				(const char *) echo_strings[string_index]);*/
-
-		/* Start send. */
-		returned_status = freertos_usart_write_packet_async(usart_port,
-				local_buffer, strlen((char *) local_buffer),
-				time_out_definition, notification_semaphore);
-		configASSERT(returned_status == STATUS_OK);
-
-		/* The async version of the write function is being used, so wait for
-		the end of the transmission.  No CPU time is used while waiting for the
-		semaphore.*/
-		xSemaphoreTake(notification_semaphore, time_out_definition * 2);
-		vTaskDelay(short_delay);
-
-		/* Send the next string next time around. */
-		/*string_index++;
-		if (string_index >= (sizeof(echo_strings) / sizeof(uint8_t *))) {
-			string_index = 0;
-		}*/
-	}
-}
-#endif
-
-#if defined confINCLUDE_USART_UART_TUNNEL
-/*-----------------------------------------------------------*/
 static void usart_tunnel_rx_task(void *pvParameters)
 {
 	freertos_usart_if		usart_port;
@@ -551,12 +499,12 @@ static void uart_tunnel_rx_task(void *pvParameters)
 		{
 			rx_buffer[i]=rx_char;
 			i=i+1;
-			if(rx_char==10)								//Must send!
+			if(rx_char==10)									//Must send!
 			{
 				rx_buffer[i]=0;								//Terminador
 				/* Start send. */
 				returned_status = freertos_usart_write_packet_async(usart_port,
-				rx_buffer, i+1,time_out_definition, notification_semaphore);
+				rx_buffer, i,time_out_definition, notification_semaphore);
 				configASSERT(returned_status == STATUS_OK);
 				/* The async version of the write function is being used, so wait for
 				the end of the transmission.  No CPU time is used while waiting for the

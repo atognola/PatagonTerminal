@@ -134,6 +134,9 @@
 #define PIN_LED_3_ATTR PIO_DEFAULT*/
 
 #define BOARD_NUM_OF_LED 0
+#if BOARD_NUM_OF_LED!=0
+	#error Pins conflict when leds are activated
+#endif
 
 /* ===============  SIM =============== */
 #define SIM_PWR				"sim900 on/off line"
