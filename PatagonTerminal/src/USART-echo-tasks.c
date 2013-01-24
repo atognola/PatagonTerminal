@@ -67,7 +67,8 @@ static uint8_t receive_buffer[RX_BUFFER_SIZE] = {0};
 
 #ifdef confINCLUDE_USART_UART_TUNNEL
 static uint8_t usart_receive_buffer[RX_BUFFER_SIZE] = {0};
-static uint8_t uart_receive_buffer[RX_BUFFER_SIZE] = {0};
+//static uint8_t uart_receive_buffer[RX_BUFFER_SIZE] = {0};
+static xQueueHandle sim_pwr_commands_queue;
 #endif
 
 #if (defined confINCLUDE_USART_ECHO_TASKS) || (defined confINCLUDE_USART_UART_TUNNEL)
@@ -101,6 +102,7 @@ static void usart_echo_rx_task(void *pvParameters);
  */
 static void usart_tunnel_rx_task(void *pvParameters);
 static void uart_tunnel_rx_task(void *pvParameters);
+static void turn_on_sim_task(void *pvParameters);
 
 /* Counts the number of times the Rx task receives a string.  The count is used
 to ensure the task is still executing. */
@@ -288,6 +290,7 @@ void create_usart_uart_tunnel_tasks(Usart *usart_base,
 		uint16_t uart_stack_depth_words,
 		unsigned portBASE_TYPE task_priority)
 {
+	tunnel_params_t	parameters;
 	freertos_usart_if myUsart;
 	/* Initialise the USART interface. */
 	freertos_peripheral_options_t usart_driver_options = {
@@ -308,6 +311,8 @@ void create_usart_uart_tunnel_tasks(Usart *usart_base,
 	myUsart = freertos_usart_serial_init(usart_base,&usart_settings, &usart_driver_options);
 	configASSERT(myUsart);
 	
+	sim_pwr_commands_queue = xQueueCreate(MAX_PWR_COMMANDS,COMMAND_SIZE);
+	
 	/* Success: Create the two tasks as described above. */
 	/*xTaskCreate(uart_tunnel_tx_task, (const signed char *const) "UartTx",
 	uart_stack_depth_words, (void *) myUart,
@@ -327,6 +332,13 @@ void create_usart_uart_tunnel_tasks(Usart *usart_base,
 				(void *) myUsart,						/* The parameter is used to pass the already configured USART+UART ports into the task. */
 				task_priority + 2,						/* The priority allocated to the task. */
 				NULL);									/* Used to store the handle to the created task - in this case the handle is not required. */
+	/* Task used to power on and power off Sim900 GPRS module */
+	xTaskCreate(turn_on_sim_task,							/* One of the tasks that implement the tunnel. */
+				(const signed char *const) "SimPowerOn",	/* Text name assigned to the task.  This is just to assist debugging.  The kernel does not use this name itself. */
+				configMINIMAL_STACK_SIZE,					/* The size of the stack allocated to the task. */
+				(void *) &sim_pwr_commands_queue,			/* The parameter is used to pass the already configured USART+UART ports into the task. */
+				tskIDLE_PRIORITY+2,							/* The priority allocated to the task. */
+				NULL);										/* Used to store the handle to the created task - in this case the handle is not required. */
 }
 #endif
 
@@ -436,8 +448,6 @@ static void usart_tunnel_rx_task(void *pvParameters)
 	uint32_t				received;
 	const portTickType		time_out_definition = (100UL / portTICK_RATE_MS),
 							short_delay = (10UL / portTICK_RATE_MS);
-	xSemaphoreHandle		notification_semaphore;
-	status_code_t returned_status;
 
 	/* The (already open) USART port is passed in as the task parameter. */
 	usart_port = (freertos_usart_if)pvParameters;
@@ -473,14 +483,14 @@ static void uart_tunnel_rx_task(void *pvParameters)
 	freertos_usart_if		usart_port;
 	static uint8_t			rx_buffer[RX_BUFFER_SIZE],i=0;
 	static uint8_t			rx_char;
-	uint32_t				received;
+	uint32_t				received,pwr_command;
 	const portTickType		time_out_definition = (100UL / portTICK_RATE_MS),
-	short_delay = (10UL / portTICK_RATE_MS);
+							short_delay = (10UL / portTICK_RATE_MS);
 	xSemaphoreHandle		notification_semaphore;
 	status_code_t returned_status;
 	
 	/* The (already open) USART port is passed in as the task parameter. */
-	usart_port = (freertos_usart_if)pvParameters;
+	usart_port = (freertos_usart_if *) pvParameters;
 
 	/* Create the semaphore to be used to get notified of end of
 	transmissions. */
@@ -505,18 +515,8 @@ static void uart_tunnel_rx_task(void *pvParameters)
 				if(rx_buffer[0]==COMMAND_HEADER) {
 					//Terminal command received
 					if((rx_buffer[1]=='O')&&(rx_buffer[2]=='N')) {
-						putchar('O');
-						putchar('n');
-						putchar('S');
-						putchar('i');
-						putchar('m');
-						//xTaskCreate(turn_on_sim,				/* One of the tasks that implement the tunnel. */
-						//(const signed char *const) "SimPowerOn",/* Text name assigned to the task.  This is just to assist debugging.  The kernel does not use this name itself. */
-						//configMINIMAL_STACK_SIZE,				/* The size of the stack allocated to the task. */
-						//(void *) i,									/* The parameter is used to pass the already configured USART+UART ports into the task. */
-						//tskIDLE_PRIORITY+1,						/* The priority allocated to the task. */
-						//NULL);									/* Used to store the handle to the created task - in this case the handle is not required. */
-						
+						pwr_command = ON_COMMAND;									//Pasar queue
+						xQueueSend(sim_pwr_commands_queue,&pwr_command,time_out_definition);
 					}
 					i=0;
 				} else {
@@ -563,14 +563,22 @@ portBASE_TYPE are_usart_echo_tasks_still_running(void)
 /*-----------------------------------------------------------*/
 
 #ifdef confINCLUDE_USART_UART_TUNNEL
-void turn_on_sim(void *pvParameters)
+void turn_on_sim_task(void *pvParameters)
 {
-	//set pin low
-	gpio_set_pin_low(SIM_PWR);
-	vTaskDelay(SIM_PWR_SEQUENCE);
-	//set pin high
-	gpio_set_pin_high(SIM_PWR);
-	vTaskDelete(NULL);
+	uint32_t command;
+	const portTickType		time_out_definition = (100UL / portTICK_RATE_MS),
+							short_delay = (10UL / portTICK_RATE_MS);
+	for(;;) {
+		if(xQueueReceive(sim_pwr_commands_queue,&command,short_delay)) {
+			putchar('O'); putchar('n'); putchar('S'); putchar('i'); putchar('m');	//OnSim message
+			gpio_set_pin_low(SIM_PWR_GPIO);								//set pin low
+			vTaskDelay(SIM_PWR_SEQUENCE);								//corresponding bit bang time		
+			gpio_set_pin_high(SIM_PWR_GPIO);							//set pin high
+		}
+		else {
+			vTaskDelay(time_out_definition);
+		}
+	}
 }
 #endif
 

@@ -70,15 +70,17 @@ portBASE_TYPE are_usart_echo_tasks_still_running(void);
 #include "uart.h"
 #define COMMAND_HEADER		'#'
 #define SIM_PWR_SEQUENCE	1000/portTICK_RATE_MS
+#define MAX_PWR_COMMANDS	2
+#define COMMAND_SIZE		sizeof(uint32_t)
+#define ON_COMMAND			1
+#define OF_COMMAND			2
 void create_usart_uart_tunnel_tasks(Usart *pxUsart,uint16_t usart_stack_depth_words,
 uint16_t uart_stack_depth_words,unsigned portBASE_TYPE task_priority);
 portBASE_TYPE are_tunnel_tasks_still_running(void);
-void turn_on_sim(void *pvParameters);
-typedef struct  
-{
+typedef	struct{
+	xQueueHandle sim_pwr_commands_queue;
 	freertos_usart_if myUsart;
-	freertos_uart_if myUart;
-} tunnel_serial_ports_t;
+	} tunnel_params_t;
 #endif
 
 #if (defined confINCLUDE_CDC_CLI)
