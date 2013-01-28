@@ -121,20 +121,22 @@ void vParTestInitialise(void)
 	#endif
 	#ifdef CONF_BOARD_SIM_PWR
 		taskENTER_CRITICAL();
-		#if (SIM_PWR_ACTIVE_LEVEL == 1)
-			gpio_set_pin_high(SIM_PWR_GPIO);
-		#else
+		if(SIM_PWR_IDLE_LEVEL == 0)
+		{
 			gpio_set_pin_low(SIM_PWR_GPIO);
-		#endif
+		} else {
+			gpio_set_pin_high(SIM_PWR_GPIO);
+		}
 		taskEXIT_CRITICAL();
 	#endif
 	#ifdef CONF_BOARD_SIM_NRESET
 		taskENTER_CRITICAL();
-		#if (SIM_NRST_ACTIVE_LEVEL == 1)
-			gpio_set_pin_high(SIM_NRST_GPIO);
-		#else
-			gpio_set_pin_low(SIM_NRST_GPIO);
-		#endif
+		if(SIM_NRST_IDLE_LEVEL == 0)
+		{
+			gpio_set_pin_low(SIM_NRST_GPIO);	
+		} else {
+			gpio_set_pin_high(SIM_NRST_GPIO);	
+		}
 		taskEXIT_CRITICAL();
 	#endif
 }

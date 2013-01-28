@@ -460,13 +460,15 @@ static void prvLEDTimerCallback(void *pvParameters)
 	}
 	#endif /* configINCLUDE_TWI_EEPROM_TASK */
 
-	/* If an error has been detected, turn the error LED on. */
-	if (xStatus != pdPASS) {
-		vParTestSetLED(mainERROR_LED, pdTRUE);
-	}
+	#if BOARD_NUM_OF_LED != 0
+		/* If an error has been detected, turn the error LED on. */
+		if (xStatus != pdPASS) {
+			vParTestSetLED(mainERROR_LED, pdTRUE);
+		}
 
-	/* Toggle an LED to show the system is executing. */
-	vParTestToggleLED(mainSOFTWARE_TIMER_LED);
+		/* Toggle an LED to show the system is executing. */
+		vParTestToggleLED(mainSOFTWARE_TIMER_LED);
+	#endif
 }
 
 /**

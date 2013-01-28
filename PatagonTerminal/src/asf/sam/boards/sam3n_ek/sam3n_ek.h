@@ -142,7 +142,7 @@
 #define SIM_PWR				"sim900 on/off line"
 #define SIM_PWR_GPIO		(PIO_PA0_IDX)
 #define SIM_PWR_FLAGS		(PIO_OUTPUT_1 | PIO_DEFAULT)
-#define SIM_PWR_ACTIVE_LEVEL 1
+#define SIM_PWR_IDLE_LEVEL 0
 
 #define PIN_SIM_PWR_MASK PIO_PA0
 #define PIN_SIM_PWR_PIO PIOA
@@ -153,7 +153,7 @@
 #define SIM_NRST			"sim 900 reset line"
 #define SIM_NRST_GPIO		(PIO_PA1_IDX)
 #define SIM_NRST_FLAGS		(PIO_OUTPUT_1 | PIO_DEFAULT)
-#define SIM_NRST_ACTIVE_LEVEL 1
+#define SIM_NRST_IDLE_LEVEL 0
 
 #define PIN_SIM_NRST_MASK PIO_PA1
 #define PIN_SIM_NRST_PIO PIOA

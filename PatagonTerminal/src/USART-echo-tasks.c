@@ -568,12 +568,28 @@ void turn_on_sim_task(void *pvParameters)
 	uint32_t command;
 	const portTickType		time_out_definition = (100UL / portTICK_RATE_MS),
 							short_delay = (10UL / portTICK_RATE_MS);
+	#if SIM_PWR_IDLE_LEVEL==0
+		gpio_set_pin_low(SIM_PWR_GPIO);							//set pin low
+	#else
+		gpio_set_pin_high(SIM_PWR_GPIO);						//set pin high
+		#error La ShangriBoard invierte la logica
+	#endif
 	for(;;) {
 		if(xQueueReceive(sim_pwr_commands_queue,&command,short_delay)) {
-			putchar('O'); putchar('n'); putchar('S'); putchar('i'); putchar('m');	//OnSim message
-			gpio_set_pin_low(SIM_PWR_GPIO);								//set pin low
-			vTaskDelay(SIM_PWR_SEQUENCE);								//corresponding bit bang time		
-			gpio_set_pin_high(SIM_PWR_GPIO);							//set pin high
+			putchar('O'); putchar('n'); putchar('S'); putchar('i'); putchar('m'); putchar(13); putchar(10);	//OnSim message
+			#if SIM_PWR_IDLE_LEVEL==0
+				gpio_set_pin_high(SIM_PWR_GPIO);							//set pin high
+			#else
+				gpio_set_pin_low(SIM_PWR_GPIO);								//set pin low
+				#error La ShangriBoard invierte la logica
+			#endif
+			vTaskDelay(SIM_PWR_SEQUENCE);									//corresponding bit bang time		
+			#if SIM_PWR_IDLE_LEVEL==0
+				gpio_set_pin_low(SIM_PWR_GPIO);								//set pin low
+			#else
+				gpio_set_pin_high(SIM_PWR_GPIO);							//set pin high
+				#error La ShangriBoard invierte la logica
+			#endif
 		}
 		else {
 			vTaskDelay(time_out_definition);
