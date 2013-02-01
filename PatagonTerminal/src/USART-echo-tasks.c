@@ -519,6 +519,8 @@ static void uart_tunnel_rx_task(void *pvParameters)
 					} else if((rx_buffer[1]=='R')&&(rx_buffer[2]=='E')&&(rx_buffer[3]=='S')) {
 						pwr_command = RES_COMMAND;									//Pasar comando en queue
 						xQueueSend(sim_pwr_commands_queue,&pwr_command,time_out_definition);
+					}  else {
+						putchar('N'); putchar('o'); putchar('C'); putchar('m'); putchar('d'); putchar(13); putchar(10);	//ResSim message
 					}
 					i=0;
 				} else {
@@ -572,7 +574,8 @@ void turn_on_sim_task(void *pvParameters)
 							short_delay = (10UL / portTICK_RATE_MS);
 	
 	for(;;) {
-		if(xQueueReceive(sim_pwr_commands_queue,&command,short_delay)==pdTRUE) {
+		/*if(xQueueReceive(sim_pwr_commands_queue,&command,short_delay)) {*/
+		if(xQueueReceive(sim_pwr_commands_queue,&command,portMAX_DELAY)) {
 			if(command==ON_COMMAND) {
 				putchar('O'); putchar('n'); putchar('S'); putchar('i'); putchar('m'); putchar(13); putchar(10);	//OnSim message
 				#if SIM_PWR_IDLE_LEVEL==0
@@ -605,9 +608,8 @@ void turn_on_sim_task(void *pvParameters)
 				#error La ShangriBoard invierte la logica
 				#endif
 			}
-		}
-		else {
-			vTaskDelay(time_out_definition);
+		} else {
+			//vTaskDelay(time_out_definition);
 		}
 	}
 }
