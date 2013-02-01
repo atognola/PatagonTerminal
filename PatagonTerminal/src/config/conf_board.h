@@ -80,7 +80,7 @@
 /* Configure USART synchronous communication SCK pin */
 //#define CONF_BOARD_USART_SCK
 
-/* Configure SIM900 PWR pin */								//Patagon: Sim900 gpio initialization
+/* Configure SIM900 PWR pin */
 #define CONF_BOARD_SIM_PWR
 /* Configure SIM900 nRESET pin */
 #define CONF_BOARD_SIM_NRESET

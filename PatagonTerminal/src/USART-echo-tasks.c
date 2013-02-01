@@ -55,6 +55,7 @@
 /* Demo includes. */
 #include "demo-tasks.h"
 #include <gpio.h>
+#include "sam3n_ek.h"
 
 #ifndef	RX_BUFFER_SIZE
 #define RX_BUFFER_SIZE          (79)
@@ -113,7 +114,6 @@ static uint32_t uart_rx_task_loops = 0UL;
 /*-----------------------------------------------------------*/
 
 #if defined confINCLUDE_USART_ECHO_TASKS
-
 /* Counts the number of times the Rx task receives a string.  The count is used
 to ensure the task is still executing. */
 static uint32_t rx_task_loops = 0UL;
@@ -290,7 +290,6 @@ void create_usart_uart_tunnel_tasks(Usart *usart_base,
 		uint16_t uart_stack_depth_words,
 		unsigned portBASE_TYPE task_priority)
 {
-	tunnel_params_t	parameters;
 	freertos_usart_if myUsart;
 	/* Initialise the USART interface. */
 	freertos_peripheral_options_t usart_driver_options = {
@@ -483,7 +482,7 @@ static void uart_tunnel_rx_task(void *pvParameters)
 	freertos_usart_if		usart_port;
 	static uint8_t			rx_buffer[RX_BUFFER_SIZE],i=0;
 	static uint8_t			rx_char;
-	uint32_t				received,pwr_command;
+	uint32_t				pwr_command;
 	const portTickType		time_out_definition = (100UL / portTICK_RATE_MS),
 							short_delay = (10UL / portTICK_RATE_MS);
 	xSemaphoreHandle		notification_semaphore;
@@ -568,12 +567,7 @@ void turn_on_sim_task(void *pvParameters)
 	uint32_t command;
 	const portTickType		time_out_definition = (100UL / portTICK_RATE_MS),
 							short_delay = (10UL / portTICK_RATE_MS);
-	#if SIM_PWR_IDLE_LEVEL==0
-		gpio_set_pin_low(SIM_PWR_GPIO);							//set pin low
-	#else
-		gpio_set_pin_high(SIM_PWR_GPIO);						//set pin high
-		#error La ShangriBoard invierte la logica
-	#endif
+	
 	for(;;) {
 		if(xQueueReceive(sim_pwr_commands_queue,&command,short_delay)) {
 			putchar('O'); putchar('n'); putchar('S'); putchar('i'); putchar('m'); putchar(13); putchar(10);	//OnSim message

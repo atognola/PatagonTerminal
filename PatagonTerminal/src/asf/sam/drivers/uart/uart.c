@@ -108,8 +108,8 @@ uint32_t uart_init(Uart *p_uart, const sam_uart_opt_t *p_uart_opt)
 	p_uart->UART_MR = p_uart_opt->ul_mode;
 
 	/* Disable PDC channel */
-	//p_uart->UART_PTCR = UART_PTCR_RXTDIS | UART_PTCR_TXTDIS;
-	#warning Esto no es estandar, vamos a ver si funciona!
+	p_uart->UART_PTCR = UART_PTCR_RXTDIS | UART_PTCR_TXTDIS;
+	#warning Esto anda a saber que hace!
 
 	/* Enable receiver and transmitter */
 	p_uart->UART_CR = UART_CR_RXEN | UART_CR_TXEN;

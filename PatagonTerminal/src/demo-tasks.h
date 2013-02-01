@@ -73,7 +73,8 @@ portBASE_TYPE are_usart_echo_tasks_still_running(void);
 #define MAX_PWR_COMMANDS	2
 #define COMMAND_SIZE		sizeof(uint32_t)
 #define ON_COMMAND			1
-#define OF_COMMAND			2
+#define OFF_COMMAND			2
+#define RES_COMMAND			3
 void create_usart_uart_tunnel_tasks(Usart *pxUsart,uint16_t usart_stack_depth_words,
 uint16_t uart_stack_depth_words,unsigned portBASE_TYPE task_priority);
 portBASE_TYPE are_tunnel_tasks_still_running(void);
