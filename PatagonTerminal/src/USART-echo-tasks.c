@@ -514,7 +514,10 @@ static void uart_tunnel_rx_task(void *pvParameters)
 				if(rx_buffer[0]==COMMAND_HEADER) {
 					//Terminal command received
 					if((rx_buffer[1]=='O')&&(rx_buffer[2]=='N')) {
-						pwr_command = ON_COMMAND;									//Pasar queue
+						pwr_command = ON_COMMAND;									//Pasar comando en queue
+						xQueueSend(sim_pwr_commands_queue,&pwr_command,time_out_definition);
+					} else if((rx_buffer[1]=='R')&&(rx_buffer[2]=='E')&&(rx_buffer[3]=='S')) {
+						pwr_command = RES_COMMAND;									//Pasar comando en queue
 						xQueueSend(sim_pwr_commands_queue,&pwr_command,time_out_definition);
 					}
 					i=0;
@@ -569,21 +572,39 @@ void turn_on_sim_task(void *pvParameters)
 							short_delay = (10UL / portTICK_RATE_MS);
 	
 	for(;;) {
-		if(xQueueReceive(sim_pwr_commands_queue,&command,short_delay)) {
-			putchar('O'); putchar('n'); putchar('S'); putchar('i'); putchar('m'); putchar(13); putchar(10);	//OnSim message
-			#if SIM_PWR_IDLE_LEVEL==0
-				gpio_set_pin_high(SIM_PWR_GPIO);							//set pin high
-			#else
-				gpio_set_pin_low(SIM_PWR_GPIO);								//set pin low
+		if(xQueueReceive(sim_pwr_commands_queue,&command,short_delay)==pdTRUE) {
+			if(command==ON_COMMAND) {
+				putchar('O'); putchar('n'); putchar('S'); putchar('i'); putchar('m'); putchar(13); putchar(10);	//OnSim message
+				#if SIM_PWR_IDLE_LEVEL==0
+					gpio_set_pin_high(SIM_PWR_GPIO);							//set pin high
+				#else
+					gpio_set_pin_low(SIM_PWR_GPIO);								//set pin low
+					#error La ShangriBoard invierte la logica
+				#endif
+				vTaskDelay(SIM_PWR_SEQUENCE);									//corresponding bit bang time		
+				#if SIM_PWR_IDLE_LEVEL==0
+					gpio_set_pin_low(SIM_PWR_GPIO);								//set pin low
+				#else
+					gpio_set_pin_high(SIM_PWR_GPIO);							//set pin high
+					#error La ShangriBoard invierte la logica
+				#endif
+			} else if (command==RES_COMMAND)
+			{
+				putchar('R'); putchar('e'); putchar('s'); putchar('S'); putchar('i'); putchar('m'); putchar(13); putchar(10);	//ResSim message
+				#if SIM_NRST_IDLE_LEVEL==0
+					gpio_set_pin_high(SIM_NRST_GPIO);							//set pin high
+				#else
+					gpio_set_pin_low(SIM_NRST_GPIO);							//set pin low
 				#error La ShangriBoard invierte la logica
-			#endif
-			vTaskDelay(SIM_PWR_SEQUENCE);									//corresponding bit bang time		
-			#if SIM_PWR_IDLE_LEVEL==0
-				gpio_set_pin_low(SIM_PWR_GPIO);								//set pin low
-			#else
-				gpio_set_pin_high(SIM_PWR_GPIO);							//set pin high
+				#endif
+				vTaskDelay(SIM_RES_SEQUENCE);									//corresponding bit bang time
+				#if SIM_NRST_IDLE_LEVEL==0
+					gpio_set_pin_low(SIM_NRST_GPIO);							//set pin low
+				#else
+					gpio_set_pin_high(SIM_NRST_GPIO);							//set pin high
 				#error La ShangriBoard invierte la logica
-			#endif
+				#endif
+			}
 		}
 		else {
 			vTaskDelay(time_out_definition);

@@ -70,11 +70,12 @@ portBASE_TYPE are_usart_echo_tasks_still_running(void);
 #include "uart.h"
 #define COMMAND_HEADER		'#'
 #define SIM_PWR_SEQUENCE	1000/portTICK_RATE_MS
+#define SIM_RES_SEQUENCE	10/portTICK_RATE_MS
 #define MAX_PWR_COMMANDS	2
 #define COMMAND_SIZE		sizeof(uint32_t)
-#define ON_COMMAND			1
-#define OFF_COMMAND			2
-#define RES_COMMAND			3
+#define ON_COMMAND			11
+#define OFF_COMMAND			12
+#define RES_COMMAND			13
 void create_usart_uart_tunnel_tasks(Usart *pxUsart,uint16_t usart_stack_depth_words,
 uint16_t uart_stack_depth_words,unsigned portBASE_TYPE task_priority);
 portBASE_TYPE are_tunnel_tasks_still_running(void);
