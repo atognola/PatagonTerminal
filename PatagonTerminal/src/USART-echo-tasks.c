@@ -58,7 +58,7 @@
 #include "sam3n_ek.h"
 
 #ifndef	RX_BUFFER_SIZE
-#define RX_BUFFER_SIZE          (79)
+#define RX_BUFFER_SIZE          (100)
 #endif
 
 /* The buffer provided to the USART driver to store incoming character in. */
@@ -76,7 +76,9 @@ static xQueueHandle sim_pwr_commands_queue;
 
 /* The size of the buffer used to receive characters from the USART driver.
  * This equals the length of the longest string used in this file. */
-#define RX_BUFFER_SIZE          (79)
+#ifndef	RX_BUFFER_SIZE
+#define RX_BUFFER_SIZE          (100)
+#endif
 
 /* The baud rate to use. */
 #define USART_BAUD_RATE         (115200)
@@ -336,7 +338,7 @@ void create_usart_uart_tunnel_tasks(Usart *usart_base,
 				(const signed char *const) "SimPowerOn",	/* Text name assigned to the task.  This is just to assist debugging.  The kernel does not use this name itself. */
 				configMINIMAL_STACK_SIZE,					/* The size of the stack allocated to the task. */
 				(void *) &sim_pwr_commands_queue,			/* The parameter is used to pass the already configured USART+UART ports into the task. */
-				tskIDLE_PRIORITY+2,							/* The priority allocated to the task. */
+				tskIDLE_PRIORITY+1,							/* The priority allocated to the task. */
 				NULL);										/* Used to store the handle to the created task - in this case the handle is not required. */
 }
 #endif
@@ -480,9 +482,9 @@ static void usart_tunnel_rx_task(void *pvParameters)
 static void uart_tunnel_rx_task(void *pvParameters)
 {
 	freertos_usart_if		usart_port;
-	static uint8_t			rx_buffer[RX_BUFFER_SIZE],i=0;
+	static uint8_t			rx_buffer[RX_BUFFER_SIZE];
 	static uint8_t			rx_char;
-	uint32_t				pwr_command;
+	uint32_t				pwr_command,i=0;
 	const portTickType		time_out_definition = (100UL / portTICK_RATE_MS),
 							short_delay = (10UL / portTICK_RATE_MS);
 	xSemaphoreHandle		notification_semaphore;
@@ -525,13 +527,15 @@ static void uart_tunnel_rx_task(void *pvParameters)
 					i=0;
 				} else {
 					//Text received
-					returned_status = freertos_usart_write_packet_async(usart_port,						/* Start send. */
-					rx_buffer, i,time_out_definition, notification_semaphore);
+					//returned_status = freertos_usart_write_packet_async(usart_port,						/* Start send. */
+					//rx_buffer, i,time_out_definition, notification_semaphore);
+					returned_status = freertos_usart_write_packet(usart_port,						/* Start send. */
+					rx_buffer, i,time_out_definition);
 					configASSERT(returned_status == STATUS_OK);
 					/* The async version of the write function is being used, so wait for
 					the end of the transmission.  No CPU time is used while waiting for the
 					semaphore.*/
-					xSemaphoreTake(notification_semaphore, time_out_definition * 2);
+					//HOLAHOLAHOLAxSemaphoreTake(notification_semaphore, time_out_definition * 2);
 					i=0;
 				}				
 			}
